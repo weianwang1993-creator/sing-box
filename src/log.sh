@@ -15,12 +15,12 @@ log_set() {
             [[ $(grep -E -i "^${1,,}$" <<<$v) ]] && is_log_level_use=$v && break
         done
         [[ ! $is_log_level_use ]] && {
-            err "无法识别 log 参数: $@ \n请使用 $is_core log [${is_log_level_list[@]}] 进行相关设定.\n备注: del 参数仅临时删除 log 文件; none 参数将不会生成 log 文件."
+            err "無法識別 log 參數: $@ \n請使用 $is_core log [${is_log_level_list[@]}] 進行相關設定.\n備註: del 參數僅臨時刪除 log 檔案; none 參數將不會產生 log 檔案."
         }
         case $is_log_level_use in
         del)
             rm -rf $is_log_dir/*.log
-            msg "\n $(_green 已临时删除 log 文件, 如果你想要完全禁止生成 log 文件请使用: $is_core log none)\n"
+            msg "\n $(_green 已臨時刪除 log 檔案, 如果您想要完全禁止產生 log 檔案請使用: $is_core log none)\n"
             ;;
         none)
             rm -rf $is_log_dir/*.log
@@ -32,13 +32,13 @@ log_set() {
         esac
 
         manage restart &
-        [[ $1 != 'del' ]] && msg "\n已更新 Log 设定为: $(_green $is_log_level_use)\n"
+        [[ $1 != 'del' ]] && msg "\n已更新 Log 設定為: $(_green $is_log_level_use)\n"
     else
         if [[ -f $is_log_dir/access.log ]]; then
             msg "\n 提醒: 按 $(_green Ctrl + C) 退出\n"
             tail -f $is_log_dir/access.log
         else
-            err "无法找到 log 文件."
+            err "無法找到 log 檔案."
         fi
     fi
 }

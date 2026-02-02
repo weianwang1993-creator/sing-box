@@ -20,8 +20,8 @@ _yellow() { echo -e ${yellow}$@${none}; }
 _magenta() { echo -e ${magenta}$@${none}; }
 _red_bg() { echo -e "\e[41m$@${none}"; }
 
-is_err=$(_red_bg 错误!)
-is_warn=$(_red_bg 警告!)
+is_err=$(_red_bg "✗ 錯誤!")
+is_warn=$(_red_bg "⚠ 警告!")
 
 err() {
     echo -e "\n$is_err $@\n" && exit 1
@@ -32,15 +32,15 @@ warn() {
 }
 
 # root
-[[ $EUID != 0 ]] && err "当前非 ${yellow}ROOT用户.${none}"
+[[ $EUID != 0 ]] && err "目前非 ${yellow}ROOT 使用者.${none}"
 
 # apt-get, yum or zypper, ubuntu/debian/centos/suse
 cmd=$(type -P apt-get || type -P yum || type -P zypper)
-[[ ! $cmd ]] && err "此脚本仅支持 ${yellow}(Ubuntu or Debian or CentOS or SUSE)${none}."
+[[ ! $cmd ]] && err "此腳本僅支援 ${yellow}(Ubuntu or Debian or CentOS or SUSE)${none}."
 
 # systemd
 [[ ! $(type -P systemctl) ]] && {
-    err "此系统缺少 ${yellow}(systemctl)${none}, 请尝试执行:${yellow} ${cmd} update -y;${cmd} install systemd -y ${none}来修复此错误."
+    err "此系統缺少 ${yellow}(systemctl)${none}, 請嘗試執行:${yellow} ${cmd} update -y;${cmd} install systemd -y ${none}來修復此錯誤."
 }
 
 # wget installed or none
@@ -55,7 +55,7 @@ amd64 | x86_64)
     is_arch=arm64
     ;;
 *)
-    err "此脚本仅支持 64 位系统..."
+    err "此腳本僅支援 64 位元系統..."
     ;;
 esac
 
@@ -68,7 +68,7 @@ is_conf_dir=$is_core_dir/conf
 is_log_dir=/var/log/$is_core
 is_sh_bin=/usr/local/bin/$is_core
 is_sh_dir=$is_core_dir/sh
-is_sh_repo=$author/$is_core
+is_sh_repo=weianwang1993-creator/$is_core
 is_pkg="wget tar"
 is_config_json=$is_core_dir/config.json
 tmp_var_lists=(
@@ -108,26 +108,29 @@ msg() {
     case $1 in
     warn)
         local color=$yellow
+        local icon="⟳"
         ;;
     err)
         local color=$red
+        local icon="✗"
         ;;
     ok)
         local color=$green
+        local icon="✓"
         ;;
     esac
 
-    echo -e "${color}$(date +'%T')${none}) ${2}"
+    echo -e "${color}$(date +'%T')${none}) ${icon} ${2}"
 }
 
 # show help msg
 show_help() {
     echo -e "Usage: $0 [-f xxx | -l | -p xxx | -v xxx | -h]"
-    echo -e "  -f, --core-file <path>          自定义 $is_core_name 文件路径, e.g., -f /root/$is_core-linux-amd64.tar.gz"
-    echo -e "  -l, --local-install             本地获取安装脚本, 使用当前目录"
-    echo -e "  -p, --proxy <addr>              使用代理下载, e.g., -p http://127.0.0.1:2333"
-    echo -e "  -v, --core-version <ver>        自定义 $is_core_name 版本, e.g., -v v1.8.13"
-    echo -e "  -h, --help                      显示此帮助界面\n"
+    echo -e "  -f, --core-file <path>          自訂 $is_core_name 檔案路徑, e.g., -f /root/$is_core-linux-amd64.tar.gz"
+    echo -e "  -l, --local-install             本機取得安裝腳本, 使用目前目錄"
+    echo -e "  -p, --proxy <addr>              使用代理下載, e.g., -p http://127.0.0.1:2333"
+    echo -e "  -v, --core-version <ver>        自訂 $is_core_name 版本, e.g., -v v1.8.13"
+    echo -e "  -h, --help                      顯示此說明畫面\n"
 
     exit 0
 }
@@ -140,7 +143,7 @@ install_pkg() {
     done
     if [[ $cmd_not_found ]]; then
         pkg=$(echo $cmd_not_found | sed 's/,/ /g')
-        msg warn "安装依赖包 >${pkg}"
+        msg warn "↓ 安裝相依套件 >${pkg}"
         $cmd install -y $pkg &>/dev/null
         if [[ $? != 0 ]]; then
             [[ $cmd =~ yum ]] && yum install epel-release -y &>/dev/null
@@ -171,7 +174,7 @@ download() {
         ;;
     sh)
         link=https://github.com/${is_sh_repo}/releases/latest/download/code.tar.gz
-        name="$is_core_name 脚本"
+        name="$is_core_name 腳本"
         tmpfile=$tmpsh
         is_ok=$is_sh_ok
         ;;
@@ -184,7 +187,7 @@ download() {
     esac
 
     [[ $link ]] && {
-        msg warn "下载 ${name} > ${link}"
+        msg warn "↓ 下載 ${name} > ${link}"
         if _wget -t 3 -q -c $link -O $tmpfile; then
             mv -f $tmpfile $is_ok
         fi
@@ -201,23 +204,23 @@ get_ip() {
 check_status() {
     # dependent pkg install fail
     [[ ! -f $is_pkg_ok ]] && {
-        msg err "安装依赖包失败"
-        msg err "请尝试手动安装依赖包: $cmd update -y; $cmd install -y $is_pkg"
+        msg err "✗ 安裝相依套件失敗"
+        msg err "請嘗試手動安裝相依套件: $cmd update -y; $cmd install -y $is_pkg"
         is_fail=1
     }
 
     # download file status
     if [[ $is_wget ]]; then
         [[ ! -f $is_core_ok ]] && {
-            msg err "下载 ${is_core_name} 失败"
+            msg err "✗ 下載 ${is_core_name} 失敗"
             is_fail=1
         }
         [[ ! -f $is_sh_ok ]] && {
-            msg err "下载 ${is_core_name} 脚本失败"
+            msg err "✗ 下載 ${is_core_name} 腳本失敗"
             is_fail=1
         }
         [[ ! -f $is_jq_ok ]] && {
-            msg err "下载 jq 失败"
+            msg err "✗ 下載 jq 失敗"
             is_fail=1
         }
     else
@@ -244,30 +247,30 @@ pass_args() {
         case $1 in
         -f | --core-file)
             [[ -z $2 ]] && {
-                err "($1) 缺少必需参数, 正确使用示例: [$1 /root/$is_core-linux-amd64.tar.gz]"
+                err "($1) 缺少必要參數, 正確使用範例: [$1 /root/$is_core-linux-amd64.tar.gz]"
             } || [[ ! -f $2 ]] && {
-                err "($2) 不是一个常规的文件."
+                err "($2) 不是一個常規檔案."
             }
             is_core_file=$2
             shift 2
             ;;
         -l | --local-install)
             [[ ! -f ${PWD}/src/core.sh || ! -f ${PWD}/$is_core.sh ]] && {
-                err "当前目录 (${PWD}) 非完整的脚本目录."
+                err "目前目錄 (${PWD}) 並非完整的腳本目錄."
             }
             local_install=1
             shift 1
             ;;
         -p | --proxy)
             [[ -z $2 ]] && {
-                err "($1) 缺少必需参数, 正确使用示例: [$1 http://127.0.0.1:2333 or -p socks5://127.0.0.1:2333]"
+                err "($1) 缺少必要參數, 正確使用範例: [$1 http://127.0.0.1:2333 or -p socks5://127.0.0.1:2333]"
             }
             proxy=$2
             shift 2
             ;;
         -v | --core-version)
             [[ -z $2 ]] && {
-                err "($1) 缺少必需参数, 正确使用示例: [$1 v1.8.13]"
+                err "($1) 缺少必要參數, 正確使用範例: [$1 v1.8.13]"
             }
             is_core_ver=v${2//v/}
             shift 2
@@ -276,13 +279,13 @@ pass_args() {
             show_help
             ;;
         *)
-            echo -e "\n${is_err} ($@) 为未知参数...\n"
+            echo -e "\n${is_err} ($@) 為未知參數...\n"
             show_help
             ;;
         esac
     done
     [[ $is_core_ver && $is_core_file ]] && {
-        err "无法同时自定义 ${is_core_name} 版本和 ${is_core_name} 文件."
+        err "無法同時自訂 ${is_core_name} 版本和 ${is_core_name} 檔案."
     }
 }
 
@@ -290,9 +293,9 @@ pass_args() {
 exit_and_del_tmpdir() {
     rm -rf $tmpdir
     [[ ! $1 ]] && {
-        msg err "哦豁.."
-        msg err "安装过程出现错误..."
-        echo -e "反馈问题) https://github.com/${is_sh_repo}/issues"
+        msg err "糟糕.."
+        msg err "安裝過程發生錯誤..."
+        echo -e "回報問題) https://github.com/${is_sh_repo}/issues"
         echo
         exit 1
     }
@@ -304,7 +307,7 @@ main() {
 
     # check old version
     [[ -f $is_sh_bin && -d $is_core_dir/bin && -d $is_sh_dir && -d $is_conf_dir ]] && {
-        err "检测到脚本已安装, 如需重装请使用${green} ${is_core} reinstall ${none}命令."
+        err "偵測到腳本已安裝, 如需重新安裝請使用${green} ${is_core} reinstall ${none}指令."
     }
 
     # check parameters
@@ -313,24 +316,26 @@ main() {
     # show welcome msg
     clear
     echo
-    echo "........... $is_core_name script by $author .........."
+    echo -e "${cyan}╔══════════════════════════════════════════════╗${none}"
+    echo -e "${cyan}║${none}   ${green}$is_core_name 安裝腳本 by $author${none}              ${cyan}║${none}"
+    echo -e "${cyan}╚══════════════════════════════════════════════╝${none}"
     echo
 
     # start installing...
-    msg warn "开始安装..."
-    [[ $is_core_ver ]] && msg warn "${is_core_name} 版本: ${yellow}$is_core_ver${none}"
-    [[ $proxy ]] && msg warn "使用代理: ${yellow}$proxy${none}"
+    msg warn "⟳ 開始安裝..."
+    [[ $is_core_ver ]] && msg warn "ℹ ${is_core_name} 版本: ${yellow}$is_core_ver${none}"
+    [[ $proxy ]] && msg warn "ℹ 使用代理: ${yellow}$proxy${none}"
     # create tmpdir
     mkdir -p $tmpdir
     # if is_core_file, copy file
     [[ $is_core_file ]] && {
         cp -f $is_core_file $is_core_ok
-        msg warn "${yellow}${is_core_name} 文件使用 > $is_core_file${none}"
+        msg warn "${yellow}${is_core_name} 檔案使用 → $is_core_file${none}"
     }
     # local dir install sh script
     [[ $local_install ]] && {
         >$is_sh_ok
-        msg warn "${yellow}本地获取安装脚本 > $PWD ${none}"
+        msg warn "${yellow}本機取得安裝腳本 → $PWD ${none}"
     }
 
     timedatectl set-ntp true &>/dev/null
@@ -366,18 +371,18 @@ main() {
         mkdir -p $tmpdir/testzip
         tar zxf $is_core_ok --strip-components 1 -C $tmpdir/testzip &>/dev/null
         [[ $? != 0 ]] && {
-            msg err "${is_core_name} 文件无法通过测试."
+            msg err "✗ ${is_core_name} 檔案無法通過測試."
             exit_and_del_tmpdir
         }
         [[ ! -f $tmpdir/testzip/$is_core ]] && {
-            msg err "${is_core_name} 文件无法通过测试."
+            msg err "✗ ${is_core_name} 檔案無法通過測試."
             exit_and_del_tmpdir
         }
     fi
 
     # get server ip.
     [[ ! $ip ]] && {
-        msg err "获取服务器 IP 失败."
+        msg err "✗ 取得伺服器 IP 失敗."
         exit_and_del_tmpdir
     }
 
@@ -418,7 +423,7 @@ main() {
     mkdir -p $is_log_dir
 
     # show a tips msg
-    msg ok "生成配置文件..."
+    msg ok "✓ 產生設定檔..."
 
     # create systemd service
     load systemd.sh

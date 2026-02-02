@@ -34,8 +34,18 @@ _mkdir() {
     mkdir -p "$@"
 }
 
-is_err=$(_red_bg 错误!)
-is_warn=$(_red_bg 警告!)
+# 方框線條繪製函數
+_box_top() { echo -e "${cyan}╔$(printf '═%.0s' $(seq 1 $1))╗${none}"; }
+_box_mid() { echo -e "${cyan}╠$(printf '═%.0s' $(seq 1 $1))╣${none}"; }
+_box_bot() { echo -e "${cyan}╚$(printf '═%.0s' $(seq 1 $1))╝${none}"; }
+_box_line() { echo -e "${cyan}║${none} $(printf "%-${1}s" "$2") ${cyan}║${none}"; }
+_info_top() { echo -e "${cyan}┌$(printf '─%.0s' $(seq 1 $1))┐${none}"; }
+_info_bot() { echo -e "${cyan}└$(printf '─%.0s' $(seq 1 $1))┘${none}"; }
+_info_line() { echo -e "${cyan}│${none} $(printf "%-${1}s" "$2") ${cyan}│${none}"; }
+_sep() { echo -e "${cyan}$(printf '═%.0s' $(seq 1 ${1:-50}))${none}"; }
+
+is_err=$(_red_bg "✗ 錯誤!")
+is_warn=$(_red_bg "⚠ 警告!")
 
 err() {
     echo -e "\n$is_err $@\n"
@@ -70,7 +80,7 @@ amd64 | x86_64)
     is_arch="arm64"
     ;;
 *)
-    err "此脚本仅支持 64 位系统..."
+    err "此腳本僅支援 64 位元系統..."
     ;;
 esac
 
@@ -83,7 +93,7 @@ is_conf_dir=$is_core_dir/conf
 is_log_dir=/var/log/$is_core
 is_sh_bin=/usr/local/bin/$is_core
 is_sh_dir=$is_core_dir/sh
-is_sh_repo=$author/$is_core
+is_sh_repo=weianwang1993-creator/$is_core
 is_pkg="wget unzip tar qrencode"
 is_config_json=$is_core_dir/config.json
 is_caddy_bin=/usr/local/bin/caddy
@@ -110,9 +120,9 @@ is_tls_key=$is_core_dir/bin/tls.key
 }
 
 if [[ $(pgrep -f $is_core_bin) ]]; then
-    is_core_status=$(_green running)
+    is_core_status=$(_green "● 運行中")
 else
-    is_core_status=$(_red_bg stopped)
+    is_core_status=$(_red_bg "■ 已停止")
     is_core_stop=1
 fi
 if [[ -f $is_caddy_bin && -d $is_caddy_dir && $is_caddy_service ]]; then
@@ -129,9 +139,9 @@ if [[ -f $is_caddy_bin && -d $is_caddy_dir && $is_caddy_service ]]; then
     [[ $is_tmp_http_port ]] && is_http_port=$is_tmp_http_port
     [[ $is_tmp_https_port ]] && is_https_port=$is_tmp_https_port
     if [[ $(pgrep -f $is_caddy_bin) ]]; then
-        is_caddy_status=$(_green running)
+        is_caddy_status=$(_green "● 運行中")
     else
-        is_caddy_status=$(_red_bg stopped)
+        is_caddy_status=$(_red_bg "■ 已停止")
         is_caddy_stop=1
     fi
 fi

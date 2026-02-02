@@ -32,21 +32,21 @@ dns_set() {
             if [[ $2 ]]; then
                 is_dns_use=${2,,}
             else
-                ask string is_dns_use "请输入 DNS: "
+                ask string is_dns_use "請輸入 DNS: "
             fi
             ;;
         none)
             is_dns_use=none
             ;;
         *)
-            err "无法识别 DNS 参数: $@"
+            err "無法識別 DNS 參數: $@"
             ;;
         esac
     else
         is_tmp_list=(${is_dns_list[@]})
-        ask list is_dns_use null "\n请选择 DNS:\n"
+        ask list is_dns_use null "\n請選擇 DNS:\n"
         if [[ $is_dns_use == "set" ]]; then
-            ask string is_dns_use "请输入 DNS: "
+            ask string is_dns_use "請輸入 DNS: "
         fi
     fi
     is_dns_use_bak=$is_dns_use
@@ -61,7 +61,7 @@ dns_set() {
         fi
     fi
     manage restart &
-    msg "\n已更新 DNS 为: $(_green $is_dns_use_bak)\n"
+    msg "\n已更新 DNS 為: $(_green $is_dns_use_bak)\n"
 }
 dns_set_server() {
     if [[ $(grep '://' <<<$1) ]]; then
@@ -72,7 +72,7 @@ dns_set_server() {
             is_dns_type=${is_tmp_dns_set[0]}
             ;;
         *)
-            err "无法识别 DNS 类型!"
+            err "無法識別 DNS 類型!"
             ;;
         esac
     else
